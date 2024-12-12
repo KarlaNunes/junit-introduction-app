@@ -48,12 +48,13 @@ public class UserService {
 
         if (age < 16) {
             return "User is too young to vote.";
-        } else if (age < 18) {
+        } else if (age >= 16 && age < 18) {
             return "User can vote optionally.";
-        } else if (age <= 70) {
+        } else if (age >= 18 && age <= 70) {
             return "User is required to vote.";
         } else {
             return "User can vote optionally.";
         }
     }
+
 }
