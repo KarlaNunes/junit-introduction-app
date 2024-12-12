@@ -39,4 +39,10 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/can-vote")
+    public ResponseEntity<String> checkVotingEligibility(@PathVariable Long id) {
+        String eligibility = userService.canVote(id);
+        return ResponseEntity.ok(eligibility);
+    }
 }

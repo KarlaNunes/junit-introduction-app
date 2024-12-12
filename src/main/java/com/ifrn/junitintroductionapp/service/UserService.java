@@ -30,6 +30,7 @@ public class UserService {
         User user = getUserById(id);
         user.setName(updatedUser.getName());
         user.setEmail(updatedUser.getEmail());
+        user.setAge(updatedUser.getAge());
         return userRepository.save(user);
     }
 
@@ -39,4 +40,20 @@ public class UserService {
         userRepository.delete(user);
     }
 
+    public String canVote(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
+
+        int age = user.getAge();
+
+        if (age < 16) {
+            return "User is too young to vote.";
+        } else if (age < 18) {
+            return "User can vote optionally.";
+        } else if (age <= 70) {
+            return "User is required to vote.";
+        } else {
+            return "User can vote optionally.";
+        }
+    }
 }
