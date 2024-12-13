@@ -19,12 +19,12 @@ public class UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User with ID " + id + " not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+            throw new IllegalArgumentException("Email already exists");
         }
         return userRepository.save(user);
     }
