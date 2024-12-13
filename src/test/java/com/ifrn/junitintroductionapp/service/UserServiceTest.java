@@ -74,12 +74,15 @@ class UserServiceTest {
         assertEquals(userWithNewName.getEmail(), user.getEmail());
     }
 
-    @Test
+   @Test
     void deleteUser() {
-        User userWithNewName = new User(1L, "Karla", "Raphael", 22);;
-        when(userRepository.findById(any())).thenReturn(Optional.of(userWithNewName));
-    }
+        User user = new User(1L,"Karla", "karla@gmail.com", 22);
+        when(userRepository.findById(any())).thenReturn(Optional.of(user));
+        userService.deleteUser(1L);
 
+        verify(userRepository, times(1)).deleteById(any());
+    }
+    
     @Test
     void createUserWithDuplicatedEmail() {
         User user1 = new User(1L,"Karla", "karla@gmail.com", 22);
