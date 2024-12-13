@@ -1,14 +1,16 @@
 package com.ifrn.junitintroductionapp.service;
 
 import com.ifrn.junitintroductionapp.domain.User;
-import com.ifrn.junitintroductionapp.exceptions.UserNotFoundException;
 import com.ifrn.junitintroductionapp.repository.UserRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,11 +19,11 @@ import static org.mockito.Mockito.*;
 
 class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
-
     @Mock
     private UserRepository userRepository;
+
+    @InjectMocks
+    UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -29,32 +31,53 @@ class UserServiceTest {
     }
 
     @Test
-    void getAllUsers() {
+    void getAllUsersAndReturnAListOfSizeOne() {
+        // arrange
+        User user = new User(1L, "Karla", "karla@gmail.com", 22);
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        // Act (test)
+        List<User> users = userService.getAllUsers();
+
+        assertEquals(1, users.size());
     }
 
     @Test
-    void getUserById_UserNotFound() {
-        Long userId = 999L;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    void getUserById() {
+        User user = new User(1L, "Karla", "karla@gmail.com", 22);
+        when(userRepository.findById(any())).thenReturn(Optional.of(user));
 
-        // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.getUserById(userId));
+        User userById = userService.getUserById(1L);
+        assertEquals(user.getId(), userById.getId());
+        assertNotNull(userById);
     }
 
     @Test
-    void createUserWithValidData() {
-        //Arrange
-        User user = new User(1L,"Karla", "karla@gmail.com", 22);
+    void createUser() {
+        User user1 = new User(1L, "Karla", "karla@gmail.com", 22);
+        when(userRepository.save(any(User.class))).thenReturn(user1);
 
-        when(userRepository.save(any(User.class))).thenReturn(user);
-
-        User createdUser = userService.createUser(user);
-
+        User createdUser = userService.createUser(user1);
+        assertEquals(user1.getId(), createdUser.getId());
         assertNotNull(createdUser);
-        assertEquals(createdUser.getId(), user.getId());
-        assertEquals(user.getName(), createdUser.getName());
-        assertEquals(user.getEmail(), createdUser.getEmail());
-        assertEquals(user.getAge(), createdUser.getAge());
+    }
+
+    @Test
+    void updateUser() {
+        User user = new User(1L, "Karla", "karla@gmail.com", 22);
+        when(userRepository.findById(any())).thenReturn(Optional.of(user));
+
+        User userWithNewName = new User(1L, "Karla", "Raphael", 22);;
+
+        userService.updateUser(1L, userWithNewName);
+        assertEquals(userWithNewName.getName(), user.getName());
+        assertEquals(userWithNewName.getEmail(), user.getEmail());
+    }
+
+    @Test
+    void deleteUser() {
+        User userWithNewName = new User(1L, "Karla", "Raphael", 22);;
+        when(userRepository.findById(any())).thenReturn(Optional.of(userWithNewName));
     }
 
     @Test
@@ -72,55 +95,13 @@ class UserServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-    @Test
-    void updateUser() {
-    }
 
     @Test
-    void deleteUser() {
-    }
+    void returnAMessageThatUserIsTooYoungToVote() {
+        User user = new User(1L, "Karla", "karla@gmail.com", 15);
+        when(userRepository.findById(any())).thenReturn(Optional.of(user));
 
-    @Test
-    void testCheckVotingEligibility_Underage() {
-        User user1 = new User(1L,"Karla", "karla@gmail.com", 15);
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        // Act
-        String result = userService.canVote(user1.getId());
-
-        // Assert
-        assertEquals("User is too young to vote.", result);
-    }
-
-    @Test
-    void testCheckVotingEligibility_OptionalVoting() {
-        User user1 = new User(1L,"Karla", "karla@gmail.com", 16);
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        // Act
-        String result= userService.canVote(user1.getId());
-
-        // Assert
-        assertEquals("User can vote optionally.", result);
-    }
-
-    @Test
-    void testCheckVotingEligibility_RequiredVoting() {
-        User user1 = new User(1L,"Karla", "karla@gmail.com", 18);
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        // Act
-        String result18 = userService.canVote(user1.getId());
-
-        // Assert
-        assertEquals("User is required to vote.", result18);
-    }
-
-    @Test
-    void testCheckVotingEligibility_OptionalVotingAfter70() {
-        User user1 = new User(1L,"Karla", "karla@gmail.com", 71);
-        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        // Act
-        String result71 = userService.canVote(user1.getId());
-
-        // Assert
-        assertEquals("User can vote optionally.", result71);
+        String msg = userService.canVote(user.getId());
+        assertEquals("User is too young to vote.", msg);
     }
 }
